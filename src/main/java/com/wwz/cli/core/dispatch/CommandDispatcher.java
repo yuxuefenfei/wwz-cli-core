@@ -8,11 +8,27 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Routes parsed input to the handler that owns the resolved command.
+ *
+ * <p>The dispatcher is deliberately small: it only resolves a command name, finds the
+ * registered handler, and delegates execution. Validation, authorization, dry-run, and
+ * business logic should live in application handlers or services.</p>
+ *
+ * @param <C> application command enum type
+ */
 public class CommandDispatcher<C extends CommandSpec> implements CommandExecutor {
 
     private final CommandResolver<C> commandResolver;
     private final Map<C, CommandHandler<C>> handlers;
 
+    /**
+     * Builds the command-to-handler registry.
+     *
+     * <p>Every command may be registered by exactly one handler. Duplicate registration
+     * fails fast during application startup, which is much easier to diagnose than a
+     * command being routed unpredictably at runtime.</p>
+     */
     public CommandDispatcher(CommandResolver<C> commandResolver, List<? extends CommandHandler<C>> commandHandlers) {
         this.commandResolver = commandResolver;
         this.handlers = new LinkedHashMap<>();
@@ -26,6 +42,13 @@ public class CommandDispatcher<C extends CommandSpec> implements CommandExecutor
         }
     }
 
+    /**
+     * Resolves the holder name and executes the matched handler.
+     *
+     * <p>Unknown command names are routed to the resolver's configured unknown command.
+     * Applications normally register that command through
+     * {@link com.wwz.cli.core.handler.SystemCommandHandlerSupport}.</p>
+     */
     @Override
     public String execute(CommandHolder commandHolder) {
         var command = commandResolver.resolve(commandHolder.getName());

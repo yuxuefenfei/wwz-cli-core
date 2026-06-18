@@ -8,8 +8,26 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Shell-like command-line parser.
+ *
+ * <p>The parser supports the pieces most interactive admin tools need:</p>
+ *
+ * <ul>
+ *     <li>quoted values: {@code --time "2026-06-17 09:00"}</li>
+ *     <li>escape characters inside tokens</li>
+ *     <li>long options as {@code --name=value} or {@code --name value}</li>
+ *     <li>boolean switches such as {@code --confirm}, represented as {@code true}</li>
+ * </ul>
+ *
+ * <p>The first token is always the command name. Other non-option tokens become
+ * positional arguments. Options are stored without the leading {@code --}.</p>
+ */
 public class CommandLineParser implements CommandParser {
 
+    /**
+     * Parses one line of user input into a {@link CommandHolder}.
+     */
     @Override
     public CommandHolder parse(String line) {
         var tokens = tokenize(line == null ? "" : line);
@@ -40,6 +58,12 @@ public class CommandLineParser implements CommandParser {
         return new CommandHolder(name, args, options);
     }
 
+    /**
+     * Splits a raw line into tokens while respecting quotes and backslash escaping.
+     *
+     * <p>The parser keeps empty quoted values, so {@code --reason ""} is represented
+     * as an empty string instead of being lost.</p>
+     */
     private List<String> tokenize(String line) {
         var tokens = new ArrayList<String>();
         var current = new StringBuilder();

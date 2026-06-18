@@ -8,6 +8,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Convenience base class for command handlers.
+ *
+ * <p>Subclasses register command operations in their constructor:</p>
+ *
+ * <pre>{@code
+ * public OrgCommandHandler(OrgService service) {
+ *     register(Command.ORGS, this::listOrgs);
+ * }
+ * }</pre>
+ *
+ * <p>This pattern keeps registration close to implementation and gives duplicate
+ * registration checks inside the handler itself.</p>
+ */
 public abstract class CommandHandlerSupport<C extends CommandSpec> implements CommandHandler<C> {
 
     private final Map<C, CommandOperation<C>> operations = new LinkedHashMap<>();
@@ -26,6 +40,12 @@ public abstract class CommandHandlerSupport<C extends CommandSpec> implements Co
         return operation.execute(command, commandHolder);
     }
 
+    /**
+     * Registers one command operation.
+     *
+     * <p>Use this from subclass constructors. Registering the same command twice inside
+     * one handler is treated as a programming error and fails immediately.</p>
+     */
     protected void register(C command, CommandOperation<C> operation) {
         var previous = operations.put(command, operation);
         if (previous != null) {

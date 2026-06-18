@@ -16,6 +16,18 @@ import org.springframework.boot.ApplicationRunner;
 import java.nio.file.Paths;
 import java.util.Set;
 
+/**
+ * Base Spring Boot runner for a persistent interactive CLI shell.
+ *
+ * <p>The runner owns terminal concerns: prompt display, JLine history, arrow-key support,
+ * exit/quit handling, and exception printing. It delegates command semantics to
+ * {@link CommandReceiver} and {@link CommandExecutor}, which keeps business applications
+ * focused on their command handlers.</p>
+ *
+ * <p>Typical usage is to create an application-specific subclass and expose it as a
+ * Spring bean. Override {@link #beforeLoop(ApplicationArguments)} for startup validation
+ * and {@link #debugEnabled(ApplicationArguments)} when stack traces should be printed.</p>
+ */
 public abstract class InteractiveShellRunner implements ApplicationRunner {
 
     private static final String ANSI_UP = "\033[A";
@@ -34,6 +46,9 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
     private final CommandExecutor commandExecutor;
     private final InteractiveShellOptions options;
 
+    /**
+     * Creates a shell runner.
+     */
     protected InteractiveShellRunner(CommandReceiver commandReceiver,
                                      CommandExecutor commandExecutor,
                                      InteractiveShellOptions options) {
@@ -42,6 +57,13 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
         this.options = options;
     }
 
+    /**
+     * Starts the interactive loop.
+     *
+     * <p>Each non-empty line is parsed and executed. The returned output is printed as-is.
+     * Exceptions are converted to a short user-facing failure message, with optional stack
+     * traces controlled by {@link #debugEnabled(ApplicationArguments)}.</p>
+     */
     @Override
     public void run(ApplicationArguments args) throws Exception {
         beforeLoop(args);
@@ -84,9 +106,18 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
         }
     }
 
+    /**
+     * Hook invoked after Spring starts but before the first prompt is shown.
+     *
+     * <p>Applications can validate required configuration here, for example Redis nodes
+     * or database connection settings.</p>
+     */
     protected void beforeLoop(ApplicationArguments args) throws Exception {
     }
 
+    /**
+     * Controls whether command failures print stack traces to the console.
+     */
     protected boolean debugEnabled(ApplicationArguments args) {
         return false;
     }
