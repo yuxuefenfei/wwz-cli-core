@@ -9,9 +9,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Shell-like command-line parser.
+ * 类 shell 风格的命令行解析器。
  *
- * <p>The parser supports the pieces most interactive admin tools need:</p>
+ * <p>该解析器支持大多数交互式运维工具需要的输入形式：</p>
  *
  * <ul>
  *     <li>quoted values: {@code --time "2026-06-17 09:00"}</li>
@@ -20,13 +20,13 @@ import java.util.Map;
  *     <li>boolean switches such as {@code --confirm}, represented as {@code true}</li>
  * </ul>
  *
- * <p>The first token is always the command name. Other non-option tokens become
- * positional arguments. Options are stored without the leading {@code --}.</p>
+ * <p>第一个 token 始终作为命令名。其他非选项 token 会进入位置参数列表。
+ * 选项会去掉前缀 {@code --} 后存储。</p>
  */
 public class CommandLineParser implements CommandParser {
 
     /**
-     * Parses one line of user input into a {@link CommandHolder}.
+     * 将一行用户输入解析为 {@link CommandHolder}。
      */
     @Override
     public CommandHolder parse(String line) {
@@ -59,10 +59,10 @@ public class CommandLineParser implements CommandParser {
     }
 
     /**
-     * Splits a raw line into tokens while respecting quotes and backslash escaping.
+     * 将原始输入行拆分为 token，同时处理引号和反斜杠转义。
      *
-     * <p>The parser keeps empty quoted values, so {@code --reason ""} is represented
-     * as an empty string instead of being lost.</p>
+     * <p>解析器会保留空引号值，因此 {@code --reason ""} 会被表示为空字符串，
+     * 而不是被直接丢弃。</p>
      */
     private List<String> tokenize(String line) {
         var tokens = new ArrayList<String>();

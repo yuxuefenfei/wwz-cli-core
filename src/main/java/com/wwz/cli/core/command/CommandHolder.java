@@ -5,15 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parsed command input.
+ * 已解析的命令输入。
  *
- * <p>A {@code CommandHolder} is the neutral data structure passed between the parser,
- * dispatcher, validators, and command handlers. It intentionally does not know any
- * concrete business command enum, so the same parsed input can be reused by different
- * CLI applications.</p>
+ * <p>{@code CommandHolder} 是解析器、分发器、校验器和命令处理器之间传递的中立数据结构。
+ * 它不会依赖任何具体业务命令枚举，因此同一套解析结果可以被不同 CLI 应用复用。</p>
  *
- * <p>For a command line such as {@code clean target --org-id=1002 --confirm}, the
- * holder contains:</p>
+ * <p>例如命令行 {@code clean target --org-id=1002 --confirm} 会被解析成：</p>
  *
  * <ul>
  *     <li>{@code name}: {@code clean}</li>
@@ -28,10 +25,9 @@ public class CommandHolder {
     private final Map<String, String> options;
 
     /**
-     * Creates an immutable command holder.
+     * 创建不可变的命令对象。
      *
-     * <p>The provided lists/maps are wrapped as unmodifiable collections to prevent
-     * accidental changes while the command travels through validation and execution.</p>
+     * <p>传入的列表和映射会被包装成不可修改集合，避免命令在校验和执行过程中被意外改写。</p>
      */
     public CommandHolder(String name, List<String> args, Map<String, String> options) {
         this.name = name;
@@ -52,17 +48,17 @@ public class CommandHolder {
     }
 
     /**
-     * Returns the option value, or the provided default when the option is absent.
+     * 获取选项值；当选项不存在时返回指定默认值。
      */
     public String option(String name, String defaultValue) {
         return options.getOrDefault(name, defaultValue);
     }
 
     /**
-     * Returns {@code true} when the parsed input contains the option.
+     * 判断解析结果中是否包含指定选项。
      *
-     * <p>Boolean switches are represented as {@code optionName=true}, so callers can
-     * use this method to check whether a switch such as {@code --confirm} was provided.</p>
+     * <p>布尔开关会被表示为 {@code optionName=true}，因此调用方可以用该方法判断
+     * {@code --confirm} 这类开关是否被传入。</p>
      */
     public boolean hasOption(String name) {
         return options.containsKey(name);

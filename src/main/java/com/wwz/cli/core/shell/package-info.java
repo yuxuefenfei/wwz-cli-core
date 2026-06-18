@@ -1,8 +1,7 @@
 /**
- * Interactive shell runtime.
+ * 交互式 shell 运行时。
  *
- * <p>The shell package integrates JLine with Spring Boot's {@code ApplicationRunner}.
- * It handles terminal details and delegates command semantics to the receiver and
- * executor abstractions.</p>
+ * <p>shell 包将 JLine 与 Spring Boot 的 {@code ApplicationRunner} 集成在一起。
+ * 它处理终端细节，并把命令语义委托给 receiver 和 executor 抽象。</p>
  */
 package com.wwz.cli.core.shell;

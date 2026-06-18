@@ -17,16 +17,15 @@ import java.nio.file.Paths;
 import java.util.Set;
 
 /**
- * Base Spring Boot runner for a persistent interactive CLI shell.
+ * 持续交互式 CLI shell 的 Spring Boot runner 基类。
  *
- * <p>The runner owns terminal concerns: prompt display, JLine history, arrow-key support,
- * exit/quit handling, and exception printing. It delegates command semantics to
- * {@link CommandReceiver} and {@link CommandExecutor}, which keeps business applications
- * focused on their command handlers.</p>
+ * <p>该 runner 负责终端层面的通用能力：提示符显示、JLine 历史记录、方向键支持、
+ * exit/quit 退出处理和异常打印。命令语义会委托给 {@link CommandReceiver} 和
+ * {@link CommandExecutor}，从而让业务应用只关注自己的命令 handler。</p>
  *
- * <p>Typical usage is to create an application-specific subclass and expose it as a
- * Spring bean. Override {@link #beforeLoop(ApplicationArguments)} for startup validation
- * and {@link #debugEnabled(ApplicationArguments)} when stack traces should be printed.</p>
+ * <p>典型用法是创建一个业务应用自己的子类，并将其注册为 Spring bean。需要启动前校验时
+ * 重写 {@link #beforeLoop(ApplicationArguments)}；需要控制是否打印异常堆栈时重写
+ * {@link #debugEnabled(ApplicationArguments)}。</p>
  */
 public abstract class InteractiveShellRunner implements ApplicationRunner {
 
@@ -47,7 +46,7 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
     private final InteractiveShellOptions options;
 
     /**
-     * Creates a shell runner.
+     * 创建 shell runner。
      */
     protected InteractiveShellRunner(CommandReceiver commandReceiver,
                                      CommandExecutor commandExecutor,
@@ -58,11 +57,10 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
     }
 
     /**
-     * Starts the interactive loop.
+     * 启动交互式循环。
      *
-     * <p>Each non-empty line is parsed and executed. The returned output is printed as-is.
-     * Exceptions are converted to a short user-facing failure message, with optional stack
-     * traces controlled by {@link #debugEnabled(ApplicationArguments)}.</p>
+     * <p>每一行非空输入都会被解析并执行。执行结果会原样打印。异常会被转换为简短的用户提示，
+     * 是否额外打印异常堆栈由 {@link #debugEnabled(ApplicationArguments)} 控制。</p>
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -107,16 +105,15 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
     }
 
     /**
-     * Hook invoked after Spring starts but before the first prompt is shown.
+     * Spring 启动后、首次展示提示符前调用的钩子方法。
      *
-     * <p>Applications can validate required configuration here, for example Redis nodes
-     * or database connection settings.</p>
+     * <p>业务应用可以在这里校验必要配置，例如连接节点或数据库连接参数。</p>
      */
     protected void beforeLoop(ApplicationArguments args) throws Exception {
     }
 
     /**
-     * Controls whether command failures print stack traces to the console.
+     * 控制命令执行失败时是否在控制台打印异常堆栈。
      */
     protected boolean debugEnabled(ApplicationArguments args) {
         return false;

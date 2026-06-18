@@ -6,21 +6,21 @@ import com.wwz.cli.core.command.CommandSpec;
 import java.util.List;
 
 /**
- * Handles one or more typed commands.
+ * 处理一个或多个类型化命令。
  *
- * <p>Applications usually create one handler per feature area, for example
- * {@code SystemCommandHandler}, {@code OrgCommandHandler}, or {@code PatrolCommandHandler}.
- * A handler advertises the commands it owns through {@link #supportedCommands()}.</p>
+ * <p>业务应用通常按功能域创建 handler，例如 {@code SystemCommandHandler}、
+ * {@code OrgCommandHandler} 或 {@code PatrolCommandHandler}。handler 通过
+ * {@link #supportedCommands()} 声明自己负责哪些命令。</p>
  */
 public interface CommandHandler<C extends CommandSpec> {
 
     /**
-     * Commands owned by this handler.
+     * 当前 handler 负责的命令集合。
      */
     List<C> supportedCommands();
 
     /**
-     * Executes the command and returns text for the shell to print.
+     * 执行命令，并返回交互式 shell 需要打印的文本。
      */
     String handle(C command, CommandHolder commandHolder);
 }

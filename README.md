@@ -283,8 +283,3 @@ options = {
 - dispatcher 测试：重复注册失败、未知命令路由到系统 handler。
 - handler 测试：默认预览、确认执行、参数缺失、越权或危险操作拦截。
 - shell 子类测试：配置校验 hook、debug 开关。
-
-## 当前已接入项目
-
-- `sdic-sop-data-kit`
-- `sdic-sop-redis-cli`

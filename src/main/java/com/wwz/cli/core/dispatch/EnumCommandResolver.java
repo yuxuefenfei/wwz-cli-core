@@ -7,10 +7,10 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Default resolver for enum-based command sets.
+ * 基于枚举命令集的默认 resolver。
  *
- * <p>Each enum constant must implement {@link CommandSpec}. During construction all
- * aliases are indexed in lower case, so command lookup is case-insensitive and O(1).</p>
+ * <p>每个枚举值都需要实现 {@link CommandSpec}。构造时会把所有别名按小写建立索引，
+ * 因此命令查找不区分大小写，并且时间复杂度为 O(1)。</p>
  */
 public class EnumCommandResolver<C extends Enum<C> & CommandSpec> implements CommandResolver<C> {
 
@@ -18,10 +18,10 @@ public class EnumCommandResolver<C extends Enum<C> & CommandSpec> implements Com
     private final C unknownCommand;
 
     /**
-     * Creates a resolver for an enum command type.
+     * 为枚举命令类型创建 resolver。
      *
-     * @param enumType command enum class
-     * @param unknownCommand enum value returned for unknown or blank command names
+     * @param enumType 命令枚举类型
+     * @param unknownCommand 未知或空白命令名称对应的枚举值
      */
     public EnumCommandResolver(Class<C> enumType, C unknownCommand) {
         this.unknownCommand = unknownCommand;

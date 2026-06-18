@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Convenience base class for command handlers.
+ * 命令 handler 的便捷基类。
  *
- * <p>Subclasses register command operations in their constructor:</p>
+ * <p>子类通常在构造函数中注册命令操作：</p>
  *
  * <pre>{@code
  * public OrgCommandHandler(OrgService service) {
@@ -19,8 +19,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * <p>This pattern keeps registration close to implementation and gives duplicate
- * registration checks inside the handler itself.</p>
+ * <p>这种模式让命令注册位置靠近具体实现，也能在 handler 内部及时发现重复注册问题。</p>
  */
 public abstract class CommandHandlerSupport<C extends CommandSpec> implements CommandHandler<C> {
 
@@ -41,10 +40,10 @@ public abstract class CommandHandlerSupport<C extends CommandSpec> implements Co
     }
 
     /**
-     * Registers one command operation.
+     * 注册一个命令操作。
      *
-     * <p>Use this from subclass constructors. Registering the same command twice inside
-     * one handler is treated as a programming error and fails immediately.</p>
+     * <p>建议只在子类构造函数中调用。若同一个 handler 内重复注册同一个命令，
+     * 会被视为编程错误并立即失败。</p>
      */
     protected void register(C command, CommandOperation<C> operation) {
         var previous = operations.put(command, operation);

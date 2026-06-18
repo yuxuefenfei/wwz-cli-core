@@ -9,13 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Routes parsed input to the handler that owns the resolved command.
+ * 将解析后的命令输入路由到对应的命令处理器。
  *
- * <p>The dispatcher is deliberately small: it only resolves a command name, finds the
- * registered handler, and delegates execution. Validation, authorization, dry-run, and
- * business logic should live in application handlers or services.</p>
+ * <p>分发器刻意保持轻量：它只负责解析命令名、查找已注册的 handler，并把执行动作委托出去。
+ * 参数校验、权限控制、预览模式和业务逻辑应放在业务项目自己的 handler 或 service 中。</p>
  *
- * @param <C> application command enum type
+ * @param <C> 业务应用的命令枚举类型
  */
 public class CommandDispatcher<C extends CommandSpec> implements CommandExecutor {
 
@@ -23,11 +22,10 @@ public class CommandDispatcher<C extends CommandSpec> implements CommandExecutor
     private final Map<C, CommandHandler<C>> handlers;
 
     /**
-     * Builds the command-to-handler registry.
+     * 构建命令到 handler 的注册表。
      *
-     * <p>Every command may be registered by exactly one handler. Duplicate registration
-     * fails fast during application startup, which is much easier to diagnose than a
-     * command being routed unpredictably at runtime.</p>
+     * <p>每个命令只能由一个 handler 注册。重复注册会在应用启动阶段快速失败，
+     * 这比运行时出现不可预测的路由行为更容易定位。</p>
      */
     public CommandDispatcher(CommandResolver<C> commandResolver, List<? extends CommandHandler<C>> commandHandlers) {
         this.commandResolver = commandResolver;
@@ -43,11 +41,10 @@ public class CommandDispatcher<C extends CommandSpec> implements CommandExecutor
     }
 
     /**
-     * Resolves the holder name and executes the matched handler.
+     * 解析命令名称，并执行匹配到的 handler。
      *
-     * <p>Unknown command names are routed to the resolver's configured unknown command.
-     * Applications normally register that command through
-     * {@link com.wwz.cli.core.handler.SystemCommandHandlerSupport}.</p>
+     * <p>未知命令会被路由到 resolver 配置的 unknown 命令。业务应用通常通过
+     * {@link com.wwz.cli.core.handler.SystemCommandHandlerSupport} 注册该命令的处理逻辑。</p>
      */
     @Override
     public String execute(CommandHolder commandHolder) {

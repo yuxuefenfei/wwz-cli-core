@@ -3,16 +3,15 @@ package com.wwz.cli.core.dispatch;
 import com.wwz.cli.core.command.CommandHolder;
 
 /**
- * Minimal execution boundary used by the interactive shell.
+ * 交互式 shell 使用的最小执行边界。
  *
- * <p>The shell only needs an object that can execute a parsed command and return output.
- * Keeping this as a small interface makes it easy to test shell subclasses or decorate
- * execution with logging/metrics in the application.</p>
+ * <p>shell 只需要一个能够执行已解析命令并返回输出文本的对象。将它抽成小接口后，
+ * 业务项目可以更容易地测试 shell 子类，也可以在执行入口外层增加日志、指标等装饰逻辑。</p>
  */
 public interface CommandExecutor {
 
     /**
-     * Executes one parsed command and returns the text to print.
+     * 执行一条已解析命令，并返回需要打印的文本。
      */
     String execute(CommandHolder commandHolder);
 }
