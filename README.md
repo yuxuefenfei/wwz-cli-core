@@ -1,6 +1,6 @@
 # wwz-cli-core
 
-`wwz-cli-core` 是一个轻量的交互式 CLI 基础库，用来复用命令解析、命令分发、handler 注册和 JLine 交互式 shell 这套通用流程。
+`wwz-cli-core` 是一个轻量的交互式 CLI 基础库，用来复用命令解析、命令分发、handler 注册、结构化结果、拦截器和 JLine 交互式 shell 这套通用流程。
 
 它不包含任何业务命令。业务项目只需要定义自己的命令枚举和 handler，就可以得到一致的交互式命令体验。
 
@@ -8,7 +8,7 @@
 
 - Spring Boot 命令行工具
 - 运维或数据处理类交互式 shell
-- 需要 `help`、`clear`、`exit`、历史记录、方向键的内部工具
+- 需要 `help`、`clear`、`exit`、历史记录、方向键和 Tab 补全的内部工具
 - 希望避免每个项目重复编写 parser / dispatcher / runner 的项目
 
 ## 核心流程
@@ -21,18 +21,20 @@
   -> CommandResolver
   -> CommandDispatcher
   -> CommandHandler
-  -> 输出文本
+  -> CommandResult
+  -> 输出文本/元数据
 ```
 
 ## 包结构
 
 | 包 | 职责 |
 | --- | --- |
-| `com.wwz.cli.core.command` | 命令模型和命令枚举契约 |
+| `com.wwz.cli.core.command` | 命令模型、命令枚举契约、结构化执行结果 |
 | `com.wwz.cli.core.parser` | 把原始输入解析成 `CommandHolder` |
 | `com.wwz.cli.core.receiver` | shell 输入接收边界 |
-| `com.wwz.cli.core.dispatch` | 命令解析、路由和执行入口 |
+| `com.wwz.cli.core.dispatch` | 命令解析、路由、执行入口和拦截器 |
 | `com.wwz.cli.core.handler` | handler 抽象、注册辅助、系统命令支持 |
+| `com.wwz.cli.core.help` | 帮助文本建模和格式化 |
 | `com.wwz.cli.core.shell` | 基于 JLine 的 Spring Boot 交互式 shell |
 
 ## Maven 引入
@@ -141,12 +143,13 @@ public class DemoCliConfiguration {
 
 ## 3. 编写业务 handler
 
-继承 `CommandHandlerSupport`，在构造函数中注册命令和处理方法。
+继承 `CommandHandlerSupport`，在构造函数中注册命令和处理方法。命令操作统一返回 `CommandResult`。
 
 ```java
 package com.example.demo.cli;
 
 import com.wwz.cli.core.command.CommandHolder;
+import com.wwz.cli.core.command.CommandResult;
 import com.wwz.cli.core.handler.CommandHandlerSupport;
 import org.springframework.stereotype.Component;
 
@@ -157,10 +160,10 @@ public class OrgCommandHandler extends CommandHandlerSupport<DemoCommand> {
         register(DemoCommand.ORGS, this::listOrgs);
     }
 
-    private String listOrgs(DemoCommand command, CommandHolder holder) {
+    private CommandResult listOrgs(DemoCommand command, CommandHolder holder) {
         var keyword = holder.option("keyword", "");
-        var limit = holder.option("limit", "50");
-        return "查询机构 keyword=" + keyword + ", limit=" + limit;
+        var limit = holder.intOption("limit", 50);
+        return CommandResult.ok("查询机构 keyword=" + keyword + ", limit=" + limit);
     }
 }
 ```
@@ -189,19 +192,14 @@ public class SystemCommandHandler extends SystemCommandHandlerSupport<DemoComman
     }
 
     private String help() {
-        return String.join(System.lineSeparator(),
-                "可用命令：",
-                "  help",
-                "  clear | cls",
-                "  orgs [--keyword 关键字] [--limit 50]",
-                "  exit | quit");
+        return "可用命令：\n  help\n  clear | cls\n  orgs [--keyword 关键字] [--limit 50]\n  exit | quit";
     }
 }
 ```
 
 ## 5. 启动交互式 shell
 
-继承 `InteractiveShellRunner`，提供 prompt、历史文件名和启动提示。
+继承 `InteractiveShellRunner`，提供 prompt、历史文件名和启动提示。可按需重写退出钩子和补全器钩子。
 
 ```java
 package com.example.demo.cli;
@@ -210,22 +208,29 @@ import com.wwz.cli.core.dispatch.CommandExecutor;
 import com.wwz.cli.core.receiver.CommandReceiver;
 import com.wwz.cli.core.shell.InteractiveShellOptions;
 import com.wwz.cli.core.shell.InteractiveShellRunner;
+import org.jline.reader.Completer;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class DemoInteractiveRunner extends InteractiveShellRunner {
 
     public DemoInteractiveRunner(CommandReceiver commandReceiver, CommandExecutor commandExecutor) {
-        super(
-                commandReceiver,
-                commandExecutor,
-                new InteractiveShellOptions(
-                        "demo> ",
-                        ".demo-cli.history",
-                        "demo-cli 已启动，输入 help 查看命令，输入 exit 结束。"
-                )
-        );
+        super(commandReceiver, commandExecutor,
+                new InteractiveShellOptions("demo> ", ".demo-cli.history", "demo-cli 已启动，输入 help 查看命令，输入 exit 结束。"));
+    }
+
+    @Override
+    protected List<Completer> completers() {
+        return List.of(new StringsCompleter("help", "clear", "cls", "orgs", "exit", "quit"));
+    }
+
+    @Override
+    protected boolean beforeExit(String command) {
+        return true;
     }
 
     @Override
@@ -233,6 +238,26 @@ public class DemoInteractiveRunner extends InteractiveShellRunner {
         return args.containsOption("debug");
     }
 }
+```
+
+## 拦截器
+
+需要审计、计时或统一错误转换时，可以用 `InterceptingCommandExecutor` 包装真实 executor。
+
+```java
+var executor = new InterceptingCommandExecutor(
+        new CommandDispatcher<>(resolver, handlers),
+        List.of(new TimingInterceptor())
+);
+```
+
+## 帮助文本格式化
+
+```java
+var help = HelpFormatter.format(List.of(
+        CommandHelpEntry.builder("help").group("系统").description("查看帮助").build(),
+        CommandHelpEntry.builder("orgs").group("业务").usage("[--limit 50]").description("查询机构").build()
+));
 ```
 
 ## 解析规则
@@ -247,39 +272,11 @@ public class DemoInteractiveRunner extends InteractiveShellRunner {
 - 单引号和双引号：`--time "2026-06-17 09:00"`
 - 反斜杠转义
 - 空引号值：`--reason ""`
+- 末尾单独反斜杠会按字面量保留
 
-示例：
+## 工程化
 
-```text
-patrol-repair --org-id 1002 --time "2026-06-17 09:00..2026-06-17 10:00" --confirm
-```
-
-解析结果：
-
-```text
-name    = patrol-repair
-args    = []
-options = {
-  org-id  = 1002
-  time    = 2026-06-17 09:00..2026-06-17 10:00
-  confirm = true
-}
-```
-
-## 设计建议
-
-- 命令枚举只表达命令名和别名，不放业务逻辑。
-- 一个 handler 管一组相关命令，例如机构、清理、巡检、Redis String。
-- 参数校验放在业务 handler 或独立 validator 中。
-- 写操作建议统一使用显式选项，例如 `--confirm`。
-- `CommandDispatcher` 只负责路由，不负责权限和业务安全策略。
-- `InteractiveShellRunner.beforeLoop` 适合做启动前配置校验。
-- `InteractiveShellRunner.debugEnabled` 适合控制是否打印异常堆栈。
-
-## 测试建议
-
-- parser 测试：引号、转义、空字符串、布尔开关、`--name=value`。
-- resolver 测试：别名、大小写、未知命令。
-- dispatcher 测试：重复注册失败、未知命令路由到系统 handler。
-- handler 测试：默认预览、确认执行、参数缺失、越权或危险操作拦截。
-- shell 子类测试：配置校验 hook、debug 开关。
+- `mvn test` 执行单元测试并生成 JaCoCo 执行数据。
+- `mvn verify` 生成 JaCoCo HTML/XML 报告。
+- `mvn package` 生成主 jar 和 `sources.jar`。
+- `.github/workflows/ci.yml` 提供最小 CI 验证。

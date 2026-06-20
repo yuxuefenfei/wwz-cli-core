@@ -9,14 +9,6 @@ import java.util.Map;
  *
  * <p>{@code CommandHolder} 是解析器、分发器、校验器和命令处理器之间传递的中立数据结构。
  * 它不会依赖任何具体业务命令枚举，因此同一套解析结果可以被不同 CLI 应用复用。</p>
- *
- * <p>例如命令行 {@code clean target --org-id=1002 --confirm} 会被解析成：</p>
- *
- * <ul>
- *     <li>{@code name}: {@code clean}</li>
- *     <li>{@code args}: {@code ["target"]}</li>
- *     <li>{@code options}: {@code {"org-id": "1002", "confirm": "true"}}</li>
- * </ul>
  */
 public class CommandHolder {
 
@@ -26,8 +18,6 @@ public class CommandHolder {
 
     /**
      * 创建不可变的命令对象。
-     *
-     * <p>传入的列表和映射会被包装成不可修改集合，避免命令在校验和执行过程中被意外改写。</p>
      */
     public CommandHolder(String name, List<String> args, Map<String, String> options) {
         this.name = name;
@@ -48,6 +38,30 @@ public class CommandHolder {
     }
 
     /**
+     * 按索引获取位置参数，索引越界时返回 {@code null}。
+     */
+    public String arg(int index) {
+        return arg(index, null);
+    }
+
+    /**
+     * 按索引获取位置参数，索引越界时返回指定默认值。
+     */
+    public String arg(int index, String defaultValue) {
+        if (index < 0 || index >= args.size()) {
+            return defaultValue;
+        }
+        return args.get(index);
+    }
+
+    /**
+     * 获取位置参数数量。
+     */
+    public int argCount() {
+        return args.size();
+    }
+
+    /**
      * 获取选项值；当选项不存在时返回指定默认值。
      */
     public String option(String name, String defaultValue) {
@@ -56,11 +70,31 @@ public class CommandHolder {
 
     /**
      * 判断解析结果中是否包含指定选项。
-     *
-     * <p>布尔开关会被表示为 {@code optionName=true}，因此调用方可以用该方法判断
-     * {@code --confirm} 这类开关是否被传入。</p>
      */
     public boolean hasOption(String name) {
         return options.containsKey(name);
+    }
+
+    /**
+     * 获取整数类型选项值。
+     */
+    public int intOption(String name, int defaultValue) {
+        var value = options.get(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("选项 " + name + " 需要为整数，实际值：" + value, ex);
+        }
+    }
+
+    /**
+     * 获取布尔类型选项值。
+     */
+    public boolean boolOption(String name) {
+        var value = options.get(name);
+        return value != null && !"false".equalsIgnoreCase(value);
     }
 }

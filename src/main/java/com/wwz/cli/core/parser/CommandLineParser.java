@@ -109,6 +109,7 @@ public class CommandLineParser implements CommandParser {
             tokenStarted = true;
         }
         if (escaped) {
+            // 末尾单独出现的反斜杠按字面量保留，方便兼容 Windows 路径等输入。
             current.append('\\');
             tokenStarted = true;
         }

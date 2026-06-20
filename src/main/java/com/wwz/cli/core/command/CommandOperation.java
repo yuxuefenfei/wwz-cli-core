@@ -11,7 +11,7 @@ package com.wwz.cli.core.command;
 public interface CommandOperation<C extends CommandSpec> {
 
     /**
-     * 执行命令操作，并返回需要由 shell 打印的文本。
+     * 执行命令操作，并返回结构化执行结果。
      */
-    String execute(C command, CommandHolder commandHolder);
+    CommandResult execute(C command, CommandHolder commandHolder);
 }
