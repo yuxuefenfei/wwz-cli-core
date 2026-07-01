@@ -10,6 +10,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.Reference;
 import org.jline.reader.UserInterruptException;
+import org.jline.reader.impl.completer.AggregateCompleter;
 import org.jline.terminal.TerminalBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import org.springframework.boot.ApplicationRunner;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -162,15 +164,14 @@ public abstract class InteractiveShellRunner implements ApplicationRunner {
     }
 
     private void configureCompleters(LineReaderBuilder builder) {
-        var configuredCompleters = completers();
+        var configuredCompleters = List.copyOf(
+                Objects.requireNonNull(completers(), "completers() 不能返回 null"));
         if (configuredCompleters.isEmpty()) {
             return;
         }
-        builder.completer((reader, line, candidates) -> {
-            for (Completer completer : configuredCompleters) {
-                completer.complete(reader, line, candidates);
-            }
-        });
+        configuredCompleters.forEach(completer ->
+                Objects.requireNonNull(completer, "completers() 不能包含 null"));
+        builder.completer(new AggregateCompleter(configuredCompleters));
     }
 
     private void bindArrowKeys(LineReader reader) {

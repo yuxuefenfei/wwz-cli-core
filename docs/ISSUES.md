@@ -10,8 +10,8 @@
 | 1 | 存在 | 已修复 | `EnumCommandResolver` 对跨命令别名冲突启动期失败 |
 | 2 | 存在 | 已修复 | `InteractiveShellRunner` 增加退出命令、退出前后钩子和退出文案钩子 |
 | 3 | 存在 | 已修复 | `CommandHolder` 增加位置参数、整数选项、布尔选项便捷方法 |
-| 4 | 存在 | 已修复 | 单元测试从 5 个补充到 36 个，覆盖核心组件正常和异常路径 |
-| 5 | 存在 | 已修复 | `InteractiveShellRunner` 增加 `Completer` 扩展点 |
+| 4 | 存在 | 已修复 | 单元测试从 5 个补充到 39 个，覆盖核心组件正常和异常路径 |
+| 5 | 存在 | 已修复 | 增加 `Completer` 扩展点、枚举命令自动补全和多补全器聚合 |
 | 6 | 存在 | 已修复 | shell 运行时接入 SLF4J 日志，用户输出仍保留在控制台 |
 | 7 | 存在 | 已修复 | 新增 `CommandInterceptor` 和 `InterceptingCommandExecutor` |
 | 8 | 存在 | 已修复 | 新增 `CommandHelpEntry` 和 `HelpFormatter` |
@@ -325,6 +325,15 @@ for (Completer completer : completers()) {
 ```
 
 可进一步提供一个基于命令枚举自动生成命令名补全的默认实现。
+
+**完成情况**：
+
+- `InteractiveShellRunner.completers()` 提供业务扩展点，默认保持无补全
+- 多个补全器通过 JLine `AggregateCompleter` 聚合，可组合命令名和参数补全
+- `EnumCommandCompleter` 自动读取 `CommandSpec` 枚举的命令名及别名
+- 仅在首个 token 补全命令，避免干扰后续参数或选项补全
+- 支持显式排除空命令、未知命令等内部枚举值，并自动忽略空白和重复候选项
+- 已补充自动命令补全、别名补全和内部命令过滤测试
 
 ---
 

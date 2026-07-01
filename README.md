@@ -206,6 +206,7 @@ package com.example.demo.cli;
 
 import com.wwz.cli.core.dispatch.CommandExecutor;
 import com.wwz.cli.core.receiver.CommandReceiver;
+import com.wwz.cli.core.shell.EnumCommandCompleter;
 import com.wwz.cli.core.shell.InteractiveShellOptions;
 import com.wwz.cli.core.shell.InteractiveShellRunner;
 import org.jline.reader.Completer;
@@ -214,6 +215,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class DemoInteractiveRunner extends InteractiveShellRunner {
@@ -225,7 +227,11 @@ public class DemoInteractiveRunner extends InteractiveShellRunner {
 
     @Override
     protected List<Completer> completers() {
-        return List.of(new StringsCompleter("help", "clear", "cls", "orgs", "exit", "quit"));
+        return List.of(
+                new EnumCommandCompleter<>(DemoCommand.class,
+                        Set.of(DemoCommand.EMPTY, DemoCommand.UNKNOWN)),
+                new StringsCompleter("exit", "quit")
+        );
     }
 
     @Override
